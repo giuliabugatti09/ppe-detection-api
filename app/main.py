@@ -11,8 +11,8 @@ essa separação é intencional (mesmo princípio dos dias anteriores).
 
 import logging
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import Response
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.responses import Response, JSONResponse
 
 import cv2
 
@@ -28,6 +28,40 @@ app = FastAPI(
     description="API de detecção de Equipamentos de Proteção Individual (EPI) usando YOLOv8.",
     version="0.1.0",
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """
+    Captura qualquer exceção não tratada explicitamente pelos endpoints.
+
+    O erro completo é logado no servidor (para debug), mas o cliente
+    recebe apenas uma mensagem genérica — nunca o traceback interno,
+    que poderia expor detalhes da implementação ou ser usado de forma
+    maliciosa por quem está consumindo a API.
+    """
+    logger.error(f"Erro não tratado em {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Erro interno ao processar a requisição."},
+    )
+
+
+def _validate_and_read_image(file: UploadFile, file_bytes: bytes):
+    """
+    Validações compartilhadas entre /predict e /predict-image:
+    tipo de conteúdo declarado pelo cliente + decodificação dos bytes.
+    """
+    if file.content_type is None or not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tipo de arquivo não suportado: {file.content_type}. Envie uma imagem.",
+        )
+
+    try:
+        return bytes_to_image(file_bytes)
+    except InvalidImageError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/health")
@@ -53,13 +87,7 @@ async def predict_endpoint(file: UploadFile = File(...)):
     este endpoint apenas orquestra a chamada entre elas.
     """
     file_bytes = await file.read()
-
-    try:
-        image = bytes_to_image(file_bytes)
-    except InvalidImageError as e:
-        # Erro de domínio (imagem inválida) vira erro HTTP 400 (culpa do cliente),
-        # não 500 (que indicaria bug do nosso lado).
-        raise HTTPException(status_code=400, detail=str(e))
+    image = _validate_and_read_image(file, file_bytes)
 
     result = predict(image)
     response = format_detections(result)
@@ -77,11 +105,7 @@ async def predict_image_endpoint(file: UploadFile = File(...)):
     que devolve os dados estruturados em JSON para consumo programático.
     """
     file_bytes = await file.read()
-
-    try:
-        image = bytes_to_image(file_bytes)
-    except InvalidImageError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    image = _validate_and_read_image(file, file_bytes)
 
     result = predict(image)
     annotated_image_bgr = draw_detections(image, result)

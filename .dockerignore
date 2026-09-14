@@ -1,0 +1,14 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+notebooks/
+tests/
+*.md
+.env
+Dockerfile
+.dockerignore
+runs/
+*.zip
