@@ -8,6 +8,9 @@ Rode com: python test_manual.py
 
 import cv2
 from app.core.model_loader import predict
+from app.core.model_loader import model
+
+print(model.names)
 
 # Coloque uma imagem de teste em tests/test_images/
 IMAGE_PATH = "tests/test_images/sample.jpg"
