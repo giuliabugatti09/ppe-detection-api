@@ -1,0 +1,28 @@
+# Ambiente virtual
+venv/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Variáveis de ambiente / segredos
+.env
+
+# Modelos (pesos grandes não devem ir pro Git normal)
+# models/*.pt
+# models/*.h5
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
