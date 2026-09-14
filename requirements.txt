@@ -1,3 +1,2 @@
-opencv-python-headless
-numpy
-ultralytics        # se for usar YOLOv8; se for Keras/TF, troco por tensorflow
+   ultralytics
+   opencv-python-headless
