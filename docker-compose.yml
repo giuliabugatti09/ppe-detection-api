@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    container_name: ppe-detector-api
+    ports:
+      - "8000:8000"
+    # Monta a pasta de modelos como volume (somente leitura).
+    # Isso permite trocar os pesos do modelo sem precisar rebuildar
+    # a imagem inteira — útil durante desenvolvimento e experimentação.
+    volumes:
+      - ./models:/app/models:ro
+    restart: unless-stopped
