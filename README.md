@@ -18,7 +18,7 @@ O modelo (YOLOv8n, treinado via transfer learning) identifica 4 classes de EPI d
 Pré-requisito: [Docker](https://www.docker.com/products/docker-desktop/) instalado.
 
 ```bash
-git clone <url-do-seu-repositorio>
+git clone https://github.com/giuliabugatti09/ppe-detection-api.git
 cd ppe-detection-api
 docker compose up --build
 ```
@@ -115,4 +115,7 @@ Ver [METRICS.md](METRICS.md#limitações-gerais-e-próximos-passos) para uma an�
 ## Problemas de ambiente/build
 
 Problemas reais enfrentados durante o desenvolvimento (Docker, WSL2, compatibilidade de versões) estão documentados em [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-```
+
+## Licença 
+
+MIT
