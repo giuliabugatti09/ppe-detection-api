@@ -10,6 +10,7 @@ essa separação é intencional (mesmo princípio dos dias anteriores).
 """
 
 import logging
+import time
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import Response, JSONResponse
@@ -20,7 +21,10 @@ from app.core.model_loader import predict
 from app.services.preprocessing import bytes_to_image, InvalidImageError
 from app.services.postprocessing import format_detections, draw_detections
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -28,6 +32,31 @@ app = FastAPI(
     description="API de detecção de Equipamentos de Proteção Individual (EPI) usando YOLOv8.",
     version="0.1.0",
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Intercepta TODA requisição HTTP, registrando método, path, status
+    de resposta e tempo total de processamento.
+
+    Isso roda para qualquer endpoint (atual ou futuro) sem precisar
+    adicionar logging manualmente em cada um — é a mesma lógica de
+    reuso de código que já aplicamos em _validate_and_read_image,
+    agora no nível de infraestrutura HTTP.
+    """
+    start_time = time.perf_counter()
+
+    response = await call_next(request)
+
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    logger.info(
+        f"{request.method} {request.url.path} "
+        f"-> status={response.status_code} "
+        f"duration={duration_ms:.1f}ms"
+    )
+
+    return response
 
 
 @app.exception_handler(Exception)
@@ -89,7 +118,11 @@ async def predict_endpoint(file: UploadFile = File(...)):
     file_bytes = await file.read()
     image = _validate_and_read_image(file, file_bytes)
 
+    inference_start = time.perf_counter()
     result = predict(image)
+    inference_ms = (time.perf_counter() - inference_start) * 1000
+    logger.info(f"Inferência concluída em {inference_ms:.1f}ms")
+
     response = format_detections(result)
 
     return response
@@ -107,7 +140,11 @@ async def predict_image_endpoint(file: UploadFile = File(...)):
     file_bytes = await file.read()
     image = _validate_and_read_image(file, file_bytes)
 
+    inference_start = time.perf_counter()
     result = predict(image)
+    inference_ms = (time.perf_counter() - inference_start) * 1000
+    logger.info(f"Inferência concluída em {inference_ms:.1f}ms")
+
     annotated_image_bgr = draw_detections(image, result)
 
     # Codifica o array numpy de volta para bytes JPEG, prontos para
