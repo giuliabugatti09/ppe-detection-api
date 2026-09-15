@@ -1,6 +1,8 @@
 services:
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ppe-detector-api
     ports:
       - "8000:8000"
@@ -9,4 +11,19 @@ services:
     # a imagem inteira — útil durante desenvolvimento e experimentação.
     volumes:
       - ./models:/app/models:ro
+    restart: unless-stopped
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: ppe-detector-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      # "api" é o nome do serviço acima, não um domínio real —
+      # o Compose resolve isso automaticamente pela rede interna.
+      - API_URL=http://api:8000
+    depends_on:
+      - api
     restart: unless-stopped

@@ -7,13 +7,18 @@ qualquer outro sistema externo faria. Isso mantém a API como o
 verdadeiro "produto" do projeto, reutilizável por qualquer interface.
 """
 
+import os
+
 import streamlit as st
 import requests
 
-# URL da API. Em desenvolvimento local, aponta para localhost.
-# Quando integrarmos via docker-compose (Dia 14), isso vai virar
-# o nome do serviço (ex: "http://api:8000"), não mais localhost.
-API_URL = "http://localhost:8000"
+# URL da API, configurável via variável de ambiente.
+# - Rodando localmente (fora do Docker): usa o padrão "http://localhost:8000"
+# - Rodando dentro do Docker Compose: a variável API_URL é injetada
+#   apontando para "http://api:8000" — "api" é o NOME do serviço definido
+#   no docker-compose.yml, resolvido automaticamente pela rede interna
+#   do Compose, não é um domínio real da internet.
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="PPE Detector", page_icon="🦺")
 
