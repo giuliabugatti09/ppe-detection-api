@@ -6,6 +6,7 @@ ou app/services. Toda comunicação acontece via HTTP, exatamente como
 qualquer outro sistema externo faria. Isso mantém a API como o
 verdadeiro "produto" do projeto, reutilizável por qualquer interface.
 """
+
 import streamlit as st
 import requests
 
@@ -36,20 +37,35 @@ if uploaded_file is not None:
                 if response.status_code == 200:
                     data = response.json()
 
-                    st.success(f"{data['detection_count']} detecção(ões) encontrada(s)")
+                    if data["detection_count"] == 0:
+                        st.warning("Nenhum EPI detectado nesta imagem.")
+                    else:
+                        st.success(f"{data['detection_count']} detecção(ões) encontrada(s)")
 
-                    for det in data["detections"]:
-                        st.write(
-                            f"**{det['class_name']}** — confiança: {det['confidence']:.2%}"
-                        )
+                        # Tabela organizada em vez de linhas soltas de texto.
+                        st.subheader("Detecções")
+                        for det in data["detections"]:
+                            col1, col2 = st.columns([1, 3])
+                            with col1:
+                                st.write(f"**{det['class_name']}**")
+                            with col2:
+                                # Barra de progresso comunica confiança de forma
+                                # mais intuitiva do que só o número percentual.
+                                st.progress(
+                                    det["confidence"],
+                                    text=f"{det['confidence']:.1%} de confiança",
+                                )
 
                     # Segunda chamada, ao endpoint que devolve a imagem anotada,
-                    # para exibir visualmente as bounding boxes.
-                    files_img = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-                    image_response = requests.post(f"{API_URL}/predict-image", files=files_img, timeout=30)
+                    # para exibir visualmente as bounding boxes. Só faz sentido
+                    # buscar a imagem anotada se houve alguma detecção.
+                    if data["detection_count"] > 0:
+                        files_img = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                        image_response = requests.post(f"{API_URL}/predict-image", files=files_img, timeout=30)
 
-                    if image_response.status_code == 200:
-                        st.image(image_response.content, caption="Detecções", use_container_width=True)
+                        if image_response.status_code == 200:
+                            st.subheader("Visualização")
+                            st.image(image_response.content, caption="Detecções", use_container_width=True)
 
                 else:
                     st.error(f"Erro da API ({response.status_code}): {response.json().get('detail')}")

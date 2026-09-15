@@ -16,7 +16,7 @@ MODEL_PATH = BASE_DIR / "models" / "ppe_weights.pt"
 
 # Threshold de confiança mínima para considerar uma detecção válida
 # (detecções abaixo disso são descartadas como ruído)
-CONFIDENCE_THRESHOLD = 0.5
+CONFIDENCE_THRESHOLD = 0.6
 
 # Threshold de IoU para Non-Maximum Suppression
 # (evita múltiplas boxes sobrepostas para o mesmo objeto)
