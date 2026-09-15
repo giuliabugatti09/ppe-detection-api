@@ -11,7 +11,7 @@ repetir isso por requisição inviabilizaria a API em produção.
 import logging
 from ultralytics import YOLO
 
-from app.core.config import MODEL_PATH, CONFIDENCE_THRESHOLD, IOU_THRESHOLD
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 # reutilizam essa mesma instância em memória (comportamento padrão
 # do Python para módulos já importados).
 try:
-    logger.info(f"Carregando modelo de: {MODEL_PATH}")
-    model = YOLO(str(MODEL_PATH))
+    logger.info(f"Carregando modelo de: {settings.weights_path}")
+    model = YOLO(str(settings.weights_path))
     logger.info("Modelo carregado com sucesso.")
 except Exception as e:
     logger.error(f"Falha ao carregar o modelo: {e}")
@@ -44,8 +44,8 @@ def predict(image):
     """
     results = model.predict(
         source=image,
-        conf=CONFIDENCE_THRESHOLD,
-        iou=IOU_THRESHOLD,
+        conf=settings.confidence_threshold,
+        iou=settings.iou_threshold,
         verbose=False,
     )
     return results[0]  # predict() retorna uma lista; pegamos o resultado da única imagem

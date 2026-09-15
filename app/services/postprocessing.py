@@ -12,7 +12,7 @@ o resto da aplicação continua recebendo o mesmo formato de saída.
 import cv2
 import numpy as np
 
-from app.core.config import CLASS_NAMES
+from app.core.config import settings
 
 
 def format_detections(result) -> dict:
@@ -47,7 +47,7 @@ def format_detections(result) -> dict:
         x1, y1, x2, y2 = box.xyxy[0].tolist()
 
         detections.append({
-            "class_name": CLASS_NAMES[class_id],
+            "class_name": settings.class_names[class_id],
             "confidence": round(confidence, 4),
             "bbox": {
                 "x1": round(x1, 2),
@@ -83,7 +83,7 @@ def draw_detections(image_rgb: np.ndarray, result) -> np.ndarray:
     for box in result.boxes:
         class_id = int(box.cls[0])
         confidence = float(box.conf[0])
-        class_name = CLASS_NAMES[class_id]
+        class_name = settings.class_names[class_id]
 
         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
